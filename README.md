@@ -1,33 +1,27 @@
-# SillyTavern Extension Example
+# Deepseek Chat Reader
 
-*Provide a brief description of how your extension works, what problem it aims to solve.*
+SillyTavern 扩展，用于集成 Deepseek 导出对话阅读器。
 
-## Features
+## 功能
 
-*Describe some of the main selling points of your extension.*
+- 在 SillyTavern 中集成 Deepseek 导出对话阅读器
 
-## Installation and Usage
+## 安装和使用
 
-### Installation
 
-*In most cases, this should just be using ST's inbuilt extension installer.* 
 
-### Usage
+### 安装
 
-*Explain how to use this extension.*
 
-## Prerequisites
 
-*Specify the version of ST necessary here.*
+### 使用
 
-## Support and Contributions
 
-*Where should someone ask for support?*
 
-*Consider including your own contact info for help/questions.*
+## 支持
 
-*How can people help add to this extension?*
+- 问题反馈: GitHub Issues
 
-## License
+## 许可证
 
-*Be cool, use an open source license.*
+MIT 开源许可证

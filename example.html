@@ -1,22 +1,113 @@
-<!-- You might want to add additional HTML elements to ST. 
-    It's good practice to separate it out from your code -->
-<div class="example-extension-settings">
-    <div class="inline-drawer">
-        <div class="inline-drawer-toggle inline-drawer-header">
-            <b>Extension Example</b>
-            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+<html lang="zh-CN" data-theme="dark"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek导出对话查看器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+
+    <!-- [style.css](style.css) 内联CSS已提取到外部文件 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loading" id="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div>正在处理数据...</div>
+    </div>
+
+    <!-- 上传模态窗口 -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="upload-modal" id="uploadModal">
+        <div class="modal-header">
+            <h3>上传或输入JSON内容</h3>
+            <button class="close-modal" id="closeModal">×</button>
         </div>
-        <div class="inline-drawer-content">
-            <div class="example-extension_block flex-container">
-                <input id="my_button" class="menu_button" type="submit" value="Example Button" />
+        <div class="upload-section">
+            <div class="file-upload" id="dropZone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #3498db; margin-bottom: 8px;"></i>
+                <p style="font-size: 0.9rem;">拖放JSON文件到此处或点击上传</p>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
             </div>
 
-            <div class="example-extension_block flex-container">
-                <input id="example_setting" type="checkbox" />
-                <label for="example_setting">This is an example</label>
+            <div>
+                <h3 style="font-size: 0.95rem; margin-bottom: 8px;">或手动输入JSON内容：</h3>
+                <textarea class="json-input" id="jsonInput" placeholder="在此处粘贴JSON内容..."></textarea>
+                <button id="parseButton">解析JSON</button>
+                <p>不知道如何获取JSON数据？<a href="https://github.com/DeepSeek-Chat-Reader/DeepSeek-Chat-Reader.github.io/blob/main/README.md#how-to-use" target="_blank">查看说明</a></p>
             </div>
-
-            <hr class="sysHR" />
         </div>
     </div>
-</div>
+
+    <header>
+        <div class="header-main">
+            <h1><i class="fas fa-comments"></i>DeepSeek导出对话查看器</h1>
+            <p>上传JSON文件或手动输入JSON内容以查看DeepSeek对话。最后更新时间：2025年9月19日23点34分。<a href="https://github.com/DeepSeek-Chat-Reader/DeepSeek-Chat-Reader.github.io/" target="_blank">项目主页</a></p>
+        </div>
+        <div class="header-controls">
+            <button class="upload-modal-btn" id="uploadModalBtn" aria-label="上传JSON">
+                <i class="fas fa-upload"></i> <span>上传JSON</span>
+            </button>
+            <button class="toggle-sidebar-btn" id="toggleSidebarBtn" aria-label="切换边栏" style="display: block;"><i class="fas fa-times"></i> <span>隐藏边栏</span></button>
+            <button class="toggle-content-btn" id="toggleContentBtn" aria-label="切换内容区域" style="display: none;"><i class="fas fa-file-alt"></i> <span>显示内容</span></button>
+            <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                <i class="fas fa-sun"></i> <span>浅色模式</span>
+            </button>
+            <button class="save-btn" id="saveBtn" aria-label="保存网页">
+                <i class="fas fa-download"></i> <span>离线保存</span>
+            </button>
+            <button class="print-btn" id="printBtn" aria-label="打印内容">
+                <i class="fas fa-print"></i> <span>打印对话</span>
+            </button>
+            <button class="reset-btn" id="resetBtn" aria-label="关闭对话">
+                <i class="fas fa-redo"></i> <span>关闭对话</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="main-container" style="">
+        <div class="sidebar" id="sidebar" style="">
+            <div class="search-filters" style="">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="搜索对话标题或内容..." aria-label="搜索对话">
+                </div>
+                
+                <div class="search-stats" id="searchStats">找到 123 个匹配项</div>
+                
+                <div class="date-filter">
+                    <input type="date" id="filterStartDate" placeholder="开始日期" aria-label="开始日期">
+                    <input type="date" id="filterEndDate" placeholder="结束日期" aria-label="结束日期">
+                </div>
+
+                <div class="sort-options">
+                    <select id="sortSelect" aria-label="排序方式">
+                        <option value="newest">由新到旧</option>
+                        <option value="oldest">由旧到新</option>
+                        <option value="title">按标题排序</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="conversation-list expanded" id="conversationList">
+                <div class="conversation-list-header">
+                    <span><i class="fas fa-list"></i> 对话列表</span>
+                    <span id="conversationCount">123 个对话</span>
+                </div>
+                <div class="conversations-container" id="conversationsContainer"><div class="conversation-item" data-id="cbab9f62-8413-47f6-a2ff-7d33dd88d775" tabindex="0">
+                        <div class="conversation-title">文件后缀名与文件头的作用对比</div>
+                        <极简版对话列表内容>
+                </div>
+            </div>
+        </div>
+
+        <div class="resize-handle" id="resizeHandle" style=""></div>
+
+        <div class="content-area" id="contentArea">
+            <div class="conversation-detail" id="conversationDetailContainer"><div style="text-align: center; padding: 40px; color: #777;"><i class="fas fa-comment-dots" style="font-size: 48px;"></i><p>选择左侧的对话以查看详情</p></div></div>
+        </div>
+    </div>
+
+    <!-- [index.js](index.js) 内联JS已提取到外部文件 -->
+    <script src="index.js"></script>
+</body></html>
